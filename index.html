@@ -3,32 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-Paper Canvas Test (Fixed)</title>
+    <title>e-Paper Canvas Test (Fixed Resolution)</title>
     <style>
         body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f5f5f5; }
         .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        canvas { 
-            border: 1px solid #333; /* 테두리를 얇게 */
-            display: block; 
-            margin: 20px auto; 
+        
+        /* 실제 디스플레이 영역을 표시 (250x122) */
+        .canvas-container {
+            width: 250px;
+            height: 122px; /* 실제 보이는 높이 */
+            overflow: hidden; /* 128px 중 넘치는 부분 숨김 */
+            border: 2px solid #333;
+            margin: 20px auto;
             background: white;
         }
+        canvas { 
+            display: block; 
+            background: white;
+        }
+        
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input[type="text"], textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
         button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
         #outputArea { margin-top: 20px; }
         textarea#hexOutput { font-family: monospace; font-size: 12px; height: 100px; background: #eee; width: 100%; box-sizing: border-box; }
-        .warning { color: #d9534f; font-size: 12px; margin-top: 5px; }
+        .info { font-size: 12px; color: #666; margin-top: 5px; }
+        .warning { color: #d9534f; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Pico e-Paper 렌더링 테스트 (128px Fix)</h2>
+    <h2>Pico e-Paper 렌더링 테스트 (250x128 고정)</h2>
+    <p class="info">드라이버 호환성을 위해 내부적으로 250x128 해상도를 사용합니다.<br>아래 미리보기는 실제 출력 영역(250x122)만 보여줍니다.</p>
     
-    <canvas id="preview" width="250" height="128"></canvas>
-    <p class="warning">* 하단 약 6픽셀 영역은 실제 기기에서 잘릴 수 있습니다.</p>
+    <div class="canvas-container">
+        <canvas id="preview" width="250" height="128"></canvas>
+    </div>
 
     <div class="input-group">
         <label>전화번호</label>
@@ -37,13 +49,13 @@
 
     <div class="input-group">
         <label>메시지</label>
-        <textarea id="message" rows="3" oninput="drawCanvas()">잠시 외출 중입니다.&#13;&#10;문 앞에 두고 가주세요.</textarea>
+        <textarea id="message" rows="3" oninput="drawCanvas()">잠시 외출 중입니다.&#13;&#10;택배는 문 앞에 부탁해요!&#13;&#10;(한글 테스트)</textarea>
     </div>
 
     <button onclick="generateHex()">Hex 데이터 생성 및 복사</button>
 
     <div id="outputArea">
-        <textarea id="hexOutput" readonly></textarea>
+        <textarea id="hexOutput" readonly placeholder="버튼을 누르면 여기에 데이터가 생성됩니다."></textarea>
     </div>
 </div>
 
@@ -51,31 +63,34 @@
     const canvas = document.getElementById('preview');
     const ctx = canvas.getContext('2d');
     
-    // 수정됨: 높이를 128로 고정 (컨트롤러 메모리 맵 호환성)
+    // 드라이버가 요구하는 정확한 해상도
     const width = 250;
-    const height = 128; 
+    const height = 128;
 
     function drawCanvas() {
         const phone = document.getElementById('phone').value;
         const message = document.getElementById('message').value;
 
-        // 배경 초기화 (흰색)
+        // 1. 전체 배경을 흰색으로 초기화 (중요!)
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         
-        // 텍스트 설정 (검정)
+        // 2. 텍스트 그리기 (검정색)
         ctx.fillStyle = 'black';
         ctx.textBaseline = 'top';
 
-        // UI 디자인
+        // 타이틀
         ctx.font = 'bold 20px "Malgun Gothic", sans-serif';
         ctx.fillText('Cargotchi', 10, 10);
         
+        // 구분선
         ctx.fillRect(10, 38, width - 20, 2);
 
+        // 전화번호
         ctx.font = 'bold 26px sans-serif';
         ctx.fillText(phone, 10, 48);
 
+        // 메시지
         ctx.font = '16px "Malgun Gothic", sans-serif';
         const lines = message.split('\n');
         let y = 85;
@@ -86,23 +101,26 @@
     }
 
     function generateHex() {
-        // 전체 128 height 만큼 데이터를 읽습니다.
+        // 250x128 전체 영역의 픽셀 데이터를 가져옵니다.
         const imgData = ctx.getImageData(0, 0, width, height);
         const data = imgData.data;
         let hexStr = "";
         
+        // Waveshare 1-bit 포맷 변환 (가로 방향, MSB First)
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x += 8) {
                 let byte = 0x00;
                 for (let bit = 0; bit < 8; bit++) {
-                    if (x + bit < width) {
-                        const i = (y * width + (x + bit)) * 4;
+                    const currentX = x + bit;
+                    if (currentX < width) {
+                        const i = (y * width + currentX) * 4;
+                        // RGB 평균값이 128보다 크면 흰색(1), 아니면 검정(0)
                         const avg = (data[i] + data[i+1] + data[i+2]) / 3;
                         if (avg > 128) {
                             byte |= (0x80 >> bit);
                         }
                     } else {
-                         // 오른쪽 끝 패딩은 흰색
+                         // 오른쪽 끝 패딩 영역은 흰색으로 채움
                          byte |= (0x80 >> bit);
                     }
                 }
@@ -110,16 +128,22 @@
             }
         }
 
-        const pythonCode = `img_hex = "${hexStr}"`;
         const outputBox = document.getElementById('hexOutput');
+        // 바로 붙여넣을 수 있는 형태
+        const pythonCode = `img_hex = "${hexStr}"`;
+        
         outputBox.value = pythonCode;
         outputBox.select();
+        
         try {
             navigator.clipboard.writeText(pythonCode);
-            alert("복사되었습니다!");
-        } catch (err) {}
+            alert("복사되었습니다! Pico 코드의 img_hex 변수에 붙여넣으세요.");
+        } catch (err) {
+            alert("복사 실패. 텍스트 상자의 내용을 직접 복사하세요.");
+        }
     }
 
+    // 초기 실행
     drawCanvas();
 </script>
 </body>
