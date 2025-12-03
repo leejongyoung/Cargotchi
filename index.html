@@ -1,166 +1,250 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e-Paper Canvas Test (Fixed Resolution)</title>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cargochi 설정</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f5f5f5; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* 실제 디스플레이 영역을 표시 (250x122) */
+        input, textarea {
+            font-size: 16px;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
         .canvas-container {
             width: 250px;
-            height: 122px; /* 실제 보이는 높이 */
-            overflow: hidden; /* 128px 중 넘치는 부분 숨김 */
+            height: 122px;
+            /* 실제 보이는 높이 */
+            overflow: hidden;
+            /* 128px 중 넘치는 부분 숨김 */
             border: 2px solid #333;
             margin: 20px auto;
             background: white;
         }
-        canvas { 
-            display: block; 
+
+        canvas {
+            display: block;
             background: white;
         }
-        
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        #outputArea { margin-top: 20px; }
-        textarea#hexOutput { font-family: monospace; font-size: 12px; height: 100px; background: #eee; width: 100%; box-sizing: border-box; }
-        .info { font-size: 12px; color: #666; margin-top: 5px; }
-        .warning { color: #d9534f; font-size: 12px; }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .info {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
     </style>
 </head>
+
 <body>
+    <div class="container">
+        <h2>Cargochi 설정</h2>
+        <p class="info">Cargochi Wi-Fi에 접속한 뒤, 아래에서 내용을 수정하고 버튼을 누르면 갱신됩니다.</p>
 
-<div class="container">
-    <h2>Pico e-Paper 렌더링 테스트 (250x128 고정)</h2>
-    <p class="info">드라이버 호환성을 위해 내부적으로 250x128 해상도를 사용합니다.<br>아래 미리보기는 실제 출력 영역(250x122)만 보여줍니다.</p>
-    
-    <div class="canvas-container">
-        <canvas id="preview" width="250" height="128"></canvas>
+        <div class="canvas-container">
+            <canvas id="preview" width="250" height="128"></canvas>
+        </div>
+
+        <div class="input-group">
+            <label>상단 이모티콘</label>
+            <select id="titleEmoji">
+                <option value="Cargochi">Cargochi</option>
+                <option value="(」・ω・)」(／・ω・)／">(」・ω・)」(／・ω・)／</option>
+                <option value="＼('ω '＼) (／' ω')／">＼('ω '＼) (／' ω')／</option>
+                <option value="◟( ˘•ω•˘ )◞">◟( ˘•ω•˘ )◞</option>
+                <option value="(灬╹ω╹灬)">(灬╹ω╹灬)</option>
+                <option value="ꉂ(ˊᗜˋ*)">ꉂ(ˊᗜˋ*)</option>
+                <option value="ㅠ_ㅠ">ㅠ_ㅠ</option>
+                <option value="￣▽￣)b">￣▽￣)b</option>
+                <option value="⊙_⊙">⊙_⊙</option>
+                <option value="ᗜˬᗜ">ᗜˬᗜ</option>
+                <option value="ᕦ(ò_óˇ)ᕤ">ᕦ(ò_óˇ)ᕤ</option>
+                <option value="ᗜ_ᗜ">ᗜ_ᗜ</option>
+                <option value=">_<">>_<</option>
+                <option value="=ㅅ=">=ㅅ=</option>
+                <option value="ლ( ╹ ◡ ╹ ლ)">ლ( ╹ ◡ ╹ ლ)</option>
+                <option value="(* '.' *)">(* '.' *)</option>
+                <option value="^오^">^오^</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>전화번호</label>
+            <input type="text" id="phone" value="010-1234-5678">
+        </div>
+
+        <div class="input-group">
+            <label>메시지</label>
+            <textarea id="message" rows="3">잠시 외출 중입니다.&#13;&#10;전화주세요!</textarea>
+        </div>
+
+        <form id="imgForm" method="post" action="/">
+            <input type="hidden" name="image_data" id="image_data">
+            <button id="sendBtn" type="button">설정</button>
+        </form>
     </div>
 
-    <div class="input-group">
-        <label>전화번호</label>
-        <input type="text" id="phone" value="010-1234-5678" oninput="drawCanvas()">
-    </div>
-
-    <div class="input-group">
-        <label>메시지</label>
-        <textarea id="message" rows="3" oninput="drawCanvas()">잠시 외출 중입니다.&#13;&#10;택배는 문 앞에 부탁해요!</textarea>
-    </div>
-
-    <form id="imgForm" method="post" action="/">
-        <input type="hidden" name="image_data" id="image_data">
-        <button type="button" onclick="generateHex()">Hex 데이터 생성 및 복사 / 전송</button>
-    </form>
-
-    <div id="outputArea">
-        <textarea id="hexOutput" readonly placeholder="버튼을 누르면 여기에 데이터가 생성됩니다."></textarea>
-    </div>
-</div>
-
-<script>
-    const canvas = document.getElementById('preview');
-    const ctx = canvas.getContext('2d');
-    
-    // 드라이버가 요구하는 정확한 해상도 (내부 버퍼는 250x128 = 4000바이트)
+    <script>
     const width = 250;
-    // 실제 보이는 영역은 CSS에서 122px로 잘라 쓰고,
-    // 버퍼/Hex 데이터는 128px 전체를 생성해서 e-ink 드라이버와 정확히 맞춥니다.
-    const height = 128;
+    const height = 128;  // 내부 버퍼 기준
 
-    function drawCanvas() {
-        const phone = document.getElementById('phone').value;
-        const message = document.getElementById('message').value;
+    function drawWrappedText(context, text, x, startY, maxWidth, lineHeight) {
+        const paragraphs = text.split('\n');
+        let y = startY;
 
-        // 1. 전체 배경을 흰색으로 초기화 (중요!)
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
-        
-        // 2. 텍스트 그리기 (검정색)
-        ctx.fillStyle = 'black';
-        ctx.textBaseline = 'top';
-
-        // 타이틀
-        ctx.font = 'bold 20px "Malgun Gothic", sans-serif';
-        ctx.fillText('Cargotchi', 10, 10);
-        
-        // 구분선
-        ctx.fillRect(10, 38, width - 20, 2);
-
-        // 전화번호
-        ctx.font = 'bold 26px sans-serif';
-        ctx.fillText(phone, 10, 48);
-
-        // 메시지
-        ctx.font = '16px "Malgun Gothic", sans-serif';
-        const lines = message.split('\n');
-        let y = 85;
-        lines.forEach(line => {
-            ctx.fillText(line, 10, y);
-            y += 22;
+        paragraphs.forEach(paragraph => {
+            let line = '';
+            for (const ch of paragraph) {
+                const testLine = line + ch;
+                const metrics = context.measureText(testLine);
+                if (metrics.width > maxWidth && line !== '') {
+                    context.fillText(line, x, y);
+                    y += lineHeight;
+                    line = ch;
+                    if (y > height - lineHeight) return;  // 캔버스 범위 초과 시 중단
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line !== '' && y <= height - lineHeight) {
+                context.fillText(line, x, y);
+                y += lineHeight;
+            }
         });
     }
 
-    function generateHex() {
-        // 250x128 전체 영역의 픽셀 데이터를 가져옵니다. (드라이버 버퍼 사이즈와 일치해야 함)
-        const imgData = ctx.getImageData(0, 0, width, height);
-        const data = imgData.data;
-        let hexStr = "";
-        
-        // Waveshare 1-bit 포맷 변환 (가로 방향, MSB First)
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x += 8) {
-                let byte = 0x00;
-                for (let bit = 0; bit < 8; bit++) {
-                    const currentX = x + bit;
-                    if (currentX < width) {
-                        const i = (y * width + currentX) * 4;
-                        // RGB 평균값이 128보다 크면 흰색(1), 아니면 검정(0)
-                        const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        if (avg > 128) {
-                            byte |= (0x80 >> bit);
+    window.addEventListener('load', () => {
+        const canvas = document.getElementById('preview');
+        const ctx = canvas.getContext('2d');
+
+        const titleSelect  = document.getElementById('titleEmoji');
+        const phoneInput   = document.getElementById('phone');
+        const messageInput = document.getElementById('message');
+        const sendBtn      = document.getElementById('sendBtn');
+        const imageInput   = document.getElementById('image_data');
+        const form         = document.getElementById('imgForm');
+
+        function drawCanvas() {
+            const title = titleSelect.value;
+            const phone = phoneInput.value;
+            const message = messageInput.value;
+
+            // 배경 초기화 (흰색)
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, width, height);
+
+            // 텍스트 설정 (검정)
+            ctx.fillStyle = 'black';
+            ctx.textBaseline = 'top';
+
+            // 타이틀 (이모티콘 선택값, 가운데 정렬)
+            ctx.font = 'bold 22px "Malgun Gothic", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(title, width / 2, 4);
+
+            // 이후 텍스트는 다시 왼쪽 정렬로
+            ctx.textAlign = 'left';
+
+            // 구분선
+            ctx.fillRect(10, 32, width - 20, 2);
+
+            // 전화번호
+            ctx.font = 'bold 26px sans-serif';
+            ctx.fillText(phone, 10, 42);
+
+            // 메시지
+            ctx.font = 'bold 16px "Malgun Gothic", sans-serif';
+            drawWrappedText(ctx, message, 10, 79, width - 20, 22);
+        }
+
+        function getHexData() {
+            const imgData = ctx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            let hexStr = "";
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x += 8) {
+                    let byte = 0x00;
+                    for (let bit = 0; bit < 8; bit++) {
+                        const currentX = x + bit;
+                        if (currentX < width) {
+                            const i = (y * width + currentX) * 4;
+                            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                            if (avg > 128) {
+                                byte |= (0x80 >> bit);  // 흰색(1)
+                            }
+                        } else {
+                            byte |= (0x80 >> bit);      // 오른쪽 패딩은 흰색
                         }
-                    } else {
-                         // 오른쪽 끝 패딩 영역은 흰색으로 채움
-                         byte |= (0x80 >> bit);
                     }
+                    hexStr += byte.toString(16).padStart(2, '0');
                 }
-                hexStr += byte.toString(16).padStart(2, '0');
             }
+            return hexStr;
         }
 
-        const outputBox = document.getElementById('hexOutput');
-        // 바로 붙여넣을 수 있는 형태 (오프라인/디버깅용)
-        const pythonCode = `img_hex = "${hexStr}"`;
-        outputBox.value = pythonCode;
-        outputBox.select();
-
-        // 1) 클립보드 복사 (PC에서 수동 사용 시)
-        try {
-            navigator.clipboard.writeText(pythonCode);
-        } catch (err) {
-            // 파일로 열었거나 권한이 없을 수 있으니 조용히 무시
+        function generateAndSend() {
+            drawCanvas();
+            const hex = getHexData();
+            imageInput.value = hex;
+            form.submit();
         }
 
-        // 2) Pico에 바로 전송 (AP에 접속한 상태에서만 성공)
-        const hiddenInput = document.getElementById('image_data');
-        const form = document.getElementById('imgForm');
-        if (hiddenInput && form) {
-            hiddenInput.value = hexStr;
-            try {
-                form.submit();
-            } catch (e) {
-                // Pico 서버가 없으면 단순히 복사 기능만 동작
-            }
-        }
-    }
+        // 이벤트 연결
+        titleSelect.addEventListener('change', drawCanvas);
+        phoneInput.addEventListener('input', drawCanvas);
+        messageInput.addEventListener('input', drawCanvas);
+        sendBtn.addEventListener('click', generateAndSend);
 
-    // 초기 실행
-    drawCanvas();
+        // 초기 렌더링
+        drawCanvas();
+
+    });
 </script>
+
 </body>
 </html>

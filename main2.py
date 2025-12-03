@@ -4,8 +4,16 @@ import socket
 import ujson
 import gc
 import ubinascii
+import urandom
 from machine import Pin
 from lib.epd2in13_V4 import EPD_2in13_V4_Landscape
+
+# QR 코드는 uQR 의 QRCode / QRData 를 직접 사용
+try:
+    from uQR import QRCode, QRData, MODE_8BIT_BYTE
+    HAS_QRCODE = True
+except ImportError:
+    HAS_QRCODE = False
 
 # --- Configuration ---
 CONFIG_FILE = 'config.json'
@@ -14,6 +22,51 @@ EPD_WIDTH = 250
 EPD_HEIGHT = 122  # display height (visible area)
 CANVAS_HEIGHT = 128      # JS 캔버스 내부 높이 (상단 122라인만 실제로 보임)
 BYTES_PER_ROW = (EPD_WIDTH + 7) // 8  # 250px -> 32 bytes
+
+
+# --- QR 코드 그리기 도우미 ---
+def draw_wifi_qr(epd, ssid, password, x=0, y=0, max_size=100):
+    """
+    Wi-Fi 설정 QR 코드(WIFI:T:WPA;S:..;P:..;;)를 생성해서
+    e-Paper에 (x, y)를 좌상단 기준으로 그린다.
+
+    uQR 모듈이 없다면 조용히 스킵한다.
+    """
+    if not HAS_QRCODE:
+        print("qrcode 모듈이 없어 QR 코드는 생략됩니다.")
+        return
+
+    try:
+        # 표준 Wi-Fi QR 포맷
+        wifi_text = "WIFI:T:WPA;S:{};P:{};;".format(ssid, password)
+
+        # uQR 의 QRData 를 직접 사용해서 모드를 강제로 8비트로 고정
+        qr = QRCode()
+        qr_data = QRData(wifi_text, mode=MODE_8BIT_BYTE)
+        qr.add_data(qr_data)
+        matrix = qr.get_matrix()
+        rows = len(matrix)
+        cols = len(matrix[0])
+
+        # 주어진 max_size 안에 들어가도록 스케일 결정 (정수 배율)
+        scale = max(1, min(max_size // rows, max_size // cols))
+
+        for j in range(rows):
+            for i in range(cols):
+                if matrix[j][i]:
+                    # scale 배율로 각 모듈을 사각형으로 채우기
+                    for dy in range(scale):
+                        for dx in range(scale):
+                            px = x + i * scale + dx
+                            py = y + j * scale + dy
+                            if 0 <= px < EPD_WIDTH and 0 <= py < EPD_HEIGHT:
+                                epd.pixel(px, py, 0)  # 0 = 검정
+        print("Wi-Fi QR 코드 표시 완료.")
+    except Exception as e:
+        import sys
+        sys.print_exception(e)
+        raise
+
 
 # --- E-Paper Display Function ---
 def update_display_from_buffer(hex_data):
@@ -66,6 +119,21 @@ def update_display_from_buffer(hex_data):
         print("Display Error:", e)
 
 # --- Web Server Helpers ---
+def send_all(sock, data):
+    """
+    socket.send() 가 전체 데이터를 한 번에 보내지 못할 수 있으므로
+    끝까지 반복해서 보내는 유틸 함수.
+    """
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+    total = 0
+    length = len(data)
+    while total < length:
+        sent = sock.send(data[total:])
+        if not sent:
+            break
+        total += sent
+
 def unquote_plus(s):
     """URL decoding"""
     s = s.replace('+', ' ')
@@ -104,7 +172,11 @@ def create_web_page(saved=False):
 def start_server():
     # Start Access Point
     ap = network.WLAN(network.AP_IF)
-    ssid = 'Cargochi'
+    # SSID를 Cargochi_XXXX 형태로 생성 (XXXX = 랜덤 4자리 영문/숫자)
+    base_ssid = 'Cargochi_'
+    # 0-9A-F 16진수 4자리를 랜덤 생성 (영문+숫자)
+    suffix = "{:04X}".format(urandom.getrandbits(16))
+    ssid = base_ssid + suffix
     password = 'Cargochi1234'
     ap.config(essid=ssid, password=password)
     ap.active(True)
@@ -117,16 +189,26 @@ def start_server():
     ip = ap.ifconfig()[0]
     print(f'Connect to WiFi "{ssid}" and visit: http://{ip}')
 
-    # 부팅 시 e-Paper에 접속 정보를 한 번 표시
+    # 부팅 시 e-Paper에 접속 정보를 한 번 표시 (좌측에 Wi-Fi QR 코드)
     try:
         epd = EPD_2in13_V4_Landscape()
         epd.init()
         epd.fill(1)
-        epd.text("Cargochi AP", 10, 10, 0)
-        epd.text("SSID: " + ssid, 10, 30, 0)
-        epd.text("PASS: " + password, 10, 45, 0)
-        epd.text("URL:", 10, 65, 0)
-        epd.text(ip, 10, 80, 0)
+
+        # 왼쪽에 Wi-Fi QR 코드 (대략 100x100 내)
+        draw_wifi_qr(epd, ssid, password, x=4, y=4, max_size=100)
+
+        # 오른쪽에 텍스트 정보
+        text_x = 100  # QR 코드 오른쪽 여백 이후
+        epd.text("Please connect WiFi", text_x, 8, 0)
+        epd.text("and Visit URL", text_x, 20, 0)
+        epd.text("SSID:", text_x, 38, 0)
+        epd.text(ssid, text_x, 50, 0)
+        epd.text("PASS:", text_x, 68, 0)
+        epd.text(password, text_x, 80, 0)
+        epd.text("URL:", text_x, 98, 0)
+        epd.text(ip, text_x, 110, 0)
+
         epd.display(epd.buffer)
         epd.sleep()
         del epd
@@ -204,8 +286,9 @@ def start_server():
 
             # --- Send Response ---
             response_html = create_web_page(saved_status)
-            cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
-            cl.send(response_html)
+            # socket.send() 가 일부만 보낼 수 있으므로 send_all() 로 반복 전송
+            send_all(cl, 'HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
+            send_all(cl, response_html)
             
         except OSError as e:
             pass
