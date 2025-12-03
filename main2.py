@@ -85,146 +85,20 @@ def unquote_plus(s):
     return res.decode('utf-8')
 
 def create_web_page(saved=False):
-    success_msg = "alert('전송 완료! 화면이 곧 갱신되고, 디스플레이에 적용됩니다.');" if saved else ""
-
-    # PC의 index.html 과 유사한 UI를 임베디드로 서빙
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Cargochi e-Paper 설정</title>
-        <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background: #f5f5f5; max-width: 600px; margin: 0 auto; }}
-            .container {{ background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-            .canvas-container {{
-                width: 250px;
-                height: 122px;         /* 실제 보이는 높이 */
-                overflow: hidden;      /* 128px 중 넘치는 부분 숨김 */
-                border: 2px solid #333;
-                margin: 20px auto;
-                background: white;
-            }}
-            canvas {{
-                display: block;
-                background: white;
-            }}
-            .input-group {{ margin-bottom: 15px; }}
-            label {{ display: block; margin-bottom: 5px; font-weight: bold; }}
-            input[type="text"], textarea {{ width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }}
-            button {{ width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }}
-            .info {{ font-size: 12px; color: #666; margin-top: 5px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>Cargochi e-Paper 설정 (250x128 내부 / 250x122 표시)</h2>
-            <p class="info">Wi-Fi에 접속한 뒤, 아래에서 내용을 수정하고 버튼을 누르면 e-Paper가 바로 갱신됩니다.</p>
-
-            <div class="canvas-container">
-                <canvas id="preview" width="250" height="128"></canvas>
-            </div>
-
-            <div class="input-group">
-                <label>전화번호</label>
-                <input type="text" id="phone" value="010-1234-5678" oninput="drawCanvas()">
-            </div>
-
-            <div class="input-group">
-                <label>메시지</label>
-                <textarea id="message" rows="3" oninput="drawCanvas()">잠시 외출 중입니다.&#13;&#10;택배는 문 앞에 부탁해요!&#13;&#10;(한글 테스트)</textarea>
-            </div>
-
-            <form id="imgForm" method="post" action="/">
-                <input type="hidden" name="image_data" id="image_data">
-                <button type="button" onclick="generateAndSend()">Hex 데이터 생성 및 전송</button>
-            </form>
-        </div>
-
-        <script>
-            const canvas = document.getElementById('preview');
-            const ctx = canvas.getContext('2d');
-
-            const width = 250;
-            const height = 128;  // 내부 버퍼 기준
-
-            function drawCanvas() {{
-                const phone = document.getElementById('phone').value;
-                const message = document.getElementById('message').value;
-
-                // 배경 초기화 (흰색)
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, width, height);
-
-                // 텍스트 설정 (검정)
-                ctx.fillStyle = 'black';
-                ctx.textBaseline = 'top';
-
-                // 타이틀
-                ctx.font = 'bold 20px "Malgun Gothic", sans-serif';
-                ctx.fillText('Cargochi', 10, 10);
-
-                // 구분선
-                ctx.fillRect(10, 38, width - 20, 2);
-
-                // 전화번호
-                ctx.font = 'bold 26px sans-serif';
-                ctx.fillText(phone, 10, 48);
-
-                // 메시지
-                ctx.font = '16px "Malgun Gothic", sans-serif';
-                const lines = message.split('\\n');
-                let y = 85;
-                lines.forEach(line => {{
-                    ctx.fillText(line, 10, y);
-                    y += 22;
-                }});
-            }}
-
-            function getHexData() {{
-                const imgData = ctx.getImageData(0, 0, width, height);
-                const data = imgData.data;
-                let hexStr = "";
-
-                // Waveshare 1-bit 포맷: 가로 방향, 8픽셀 = 1바이트 (MSB First)
-                // 0 = Black, 1 = White
-                for (let y = 0; y < height; y++) {{
-                    for (let x = 0; x < width; x += 8) {{
-                        let byte = 0x00;
-                        for (let bit = 0; bit < 8; bit++) {{
-                            const currentX = x + bit;
-                            if (currentX < width) {{
-                                const i = (y * width + currentX) * 4;
-                                const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                                if (avg > 128) {{
-                                    byte |= (0x80 >> bit);  // 흰색(1)
-                                }}
-                            }} else {{
-                                byte |= (0x80 >> bit);      // 오른쪽 패딩은 흰색
-                            }}
-                        }}
-                        hexStr += byte.toString(16).padStart(2, '0');
-                    }}
-                }}
-                return hexStr;
-            }}
-
-            function generateAndSend() {{
-                drawCanvas();
-                const hex = getHexData();
-                document.getElementById('image_data').value = hex;
-                document.getElementById('imgForm').submit();
-            }}
-
-            // 초기 실행
-            drawCanvas();
-            {success_msg}
-        </script>
-    </body>
-    </html>
     """
-    return html
+    루트의 index.html 파일을 그대로 서빙한다.
+    - index.html 이 Hex 생성 및 POST(image_data=...) 까지 담당
+    - saved 파라미터는 현재 별도 표시 없이 무시
+    """
+    try:
+        with open('index.html', 'r') as f:
+            return f.read()
+    except Exception as e:
+        # index.html 이 없거나 읽기 실패 시 간단한 안내 페이지
+        return """<!DOCTYPE html>
+        <html><head><meta charset="utf-8"><title>Cargochi</title></head>
+        <body><h3>index.html 을 찾을 수 없습니다.</h3>
+        <p>루트에 index.html 파일이 있는지 확인해 주세요.</p></body></html>"""
 
 # --- Server Logic ---
 def start_server():

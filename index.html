@@ -52,7 +52,10 @@
         <textarea id="message" rows="3" oninput="drawCanvas()">잠시 외출 중입니다.&#13;&#10;택배는 문 앞에 부탁해요!&#13;&#10;(한글 테스트)</textarea>
     </div>
 
-    <button onclick="generateHex()">Hex 데이터 생성 및 복사</button>
+    <form id="imgForm" method="post" action="/">
+        <input type="hidden" name="image_data" id="image_data">
+        <button type="button" onclick="generateHex()">Hex 데이터 생성 및 복사 / 전송</button>
+    </form>
 
     <div id="outputArea">
         <textarea id="hexOutput" readonly placeholder="버튼을 누르면 여기에 데이터가 생성됩니다."></textarea>
@@ -131,17 +134,28 @@
         }
 
         const outputBox = document.getElementById('hexOutput');
-        // 바로 붙여넣을 수 있는 형태
+        // 바로 붙여넣을 수 있는 형태 (오프라인/디버깅용)
         const pythonCode = `img_hex = "${hexStr}"`;
-        
         outputBox.value = pythonCode;
         outputBox.select();
-        
+
+        // 1) 클립보드 복사 (PC에서 수동 사용 시)
         try {
             navigator.clipboard.writeText(pythonCode);
-            alert("복사되었습니다! Pico 코드의 img_hex 변수에 붙여넣으세요.");
         } catch (err) {
-            alert("복사 실패. 텍스트 상자의 내용을 직접 복사하세요.");
+            // 파일로 열었거나 권한이 없을 수 있으니 조용히 무시
+        }
+
+        // 2) Pico에 바로 전송 (AP에 접속한 상태에서만 성공)
+        const hiddenInput = document.getElementById('image_data');
+        const form = document.getElementById('imgForm');
+        if (hiddenInput && form) {
+            hiddenInput.value = hexStr;
+            try {
+                form.submit();
+            } catch (e) {
+                // Pico 서버가 없으면 단순히 복사 기능만 동작
+            }
         }
     }
 
