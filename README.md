@@ -44,8 +44,10 @@
 ```
 /Cargotchi
 ├── lib/
-│   └── epd2in13_V4.py   # E-Paper 드라이버
+│   ├── epd2in13_V4.py
+│   └── epd2in13_V4_Utils.py
 ├── main.py              # 메인 애플리케이션 (웹 서버 및 디스플레이 제어)
+├── index.html           # 웹 설정 페이지 UI
 └── README.md            # 프로젝트 소개
 ```
 

@@ -1,74 +1,32 @@
 import time
 import network
 import socket
-import ujson
 import gc
-from machine import Pin
 from lib.epd2in13_V4 import EPD_2in13_V4_Landscape
+import lib.epd2in13_V4_Utils as epd_utils
 
 # --- Configuration ---
 CONFIG_FILE = 'config.json'
-DEFAULT_PHONE = '010-0000-0000'
-# 주의: 기본 프레임버퍼 폰트는 한글을 지원하지 않습니다. 
-# 한글 출력을 위해서는 별도의 폰트 라이브러리(예: micropython-font-to-py)가 필요합니다.
-DEFAULT_MESSAGE = 'Out of Office' 
+HTML_FILE = 'index.html'  # 분리된 HTML 파일명
 
 # --- E-Paper Display Function ---
-def update_display(phone, message):
-    """Updates the e-paper display with the given phone number and message."""
-    print(f"Updating display: Phone='{phone}', Message='{message}'")
+def update_display_from_buffer(hex_data):
+    # (이전과 동일)
+    print("Processing image request...")
     try:
         epd = EPD_2in13_V4_Landscape()
         epd.init()
-        epd.Clear()
-        
-        epd.fill(0xff)  # White background
-        
-        # Draw content (Black text)
-        epd.text("Cargotchi", 10, 10, 0x00)
-        epd.hline(10, 25, 230, 0x00)
-        
-        # 폰트 크기가 작으므로 임시 방편으로 두 번 겹쳐 그려서 진하게 만듦
-        epd.text(phone, 20, 40, 0x00)
-        epd.text(phone, 21, 40, 0x00) 
-        
-        epd.text(message, 20, 60, 0x00)
-        
-        # Push to display
-        epd.display(epd.buffer)
-        
+        epd_utils.display_js_hex_image(epd, hex_data)
         print("Putting display to sleep")
         epd.sleep()
-        
-        # EPD 객체 해제 및 메모리 정리
         del epd
         gc.collect()
-        
     except Exception as e:
-        print(f"Display Error: {e}")
-
-# --- Configuration Management ---
-def save_config(phone, message):
-    try:
-        with open(CONFIG_FILE, 'w') as f:
-            ujson.dump({'phone': phone, 'message': message}, f)
-        print("Config saved.")
-    except Exception as e:
-        print(f"Error saving config: {e}")
-
-def load_config():
-    try:
-        with open(CONFIG_FILE, 'r') as f:
-            config = ujson.load(f)
-            return config.get('phone', DEFAULT_PHONE), config.get('message', DEFAULT_MESSAGE)
-    except (OSError, ValueError):
-        print("Creating default config.")
-        save_config(DEFAULT_PHONE, DEFAULT_MESSAGE)
-        return DEFAULT_PHONE, DEFAULT_MESSAGE
+        print("Display Update Error:", e)
 
 # --- Web Server Helpers ---
 def unquote_plus(s):
-    """Decodes URL-encoded characters (UTF-8 support)."""
+    # (이전과 동일)
     s = s.replace('+', ' ')
     parts = s.split('%')
     if len(parts) == 1:
@@ -85,46 +43,31 @@ def unquote_plus(s):
             res.extend(item.encode('utf-8'))
     return res.decode('utf-8')
 
-def create_web_page(phone, message, saved=False):
-    success_msg = '<p class="success">저장되었습니다! (화면이 갱신됩니다)</p>' if saved else ''
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Cargotchi Setup</title>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-            body {{ font-family: sans-serif; padding: 20px; background-color: #f4f4f8; }}
-            .container {{ max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
-            label {{ display: block; margin-top: 15px; font-weight: bold; }}
-            input[type="text"] {{ width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }}
-            input[type="submit"] {{ width: 100%; background-color: #007aff; color: white; padding: 12px; margin-top: 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }}
-            .success {{ color: #28a745; margin-top: 15px; text-align: center; font-weight: bold; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Cargotchi 설정</h1>
-            <form action="/" method="post">
-                <label for="phone">전화번호</label>
-                <input type="text" id="phone" name="phone" value="{phone}">
-                <label for="message">메시지 (영문 권장)</label>
-                <input type="text" id="message" name="message" value="{message}">
-                <input type="submit" value="디스플레이 업데이트">
-            </form>
-            {success_msg}
-        </div>
-    </body>
-    </html>
+def get_web_page(saved=False):
     """
-    return html
+    index.html 파일을 읽어서, 저장 성공 시 알림 메시지를 주입하여 반환
+    """
+    success_script = "alert('전송 완료! 화면이 곧 갱신되고, 디스플레이에 적용됩니다.');" if saved else ""
+    
+    html_content = ""
+    try:
+        with open(HTML_FILE, 'r') as f:
+            html_content = f.read()
+            
+        # HTML 파일 내의 {{SUCCESS_MSG}} 치환자를 실제 스크립트로 교체
+        html_content = html_content.replace('{{SUCCESS_MSG}}', success_script)
+        
+    except OSError:
+        html_content = "<h1>Error: index.html not found</h1>"
+        
+    return html_content
 
 # --- Server Logic ---
 def start_server():
-    # Start Access Point
     ap = network.WLAN(network.AP_IF)
-    ap.config(essid='Cargotchi-Setup', password='cargotchi1234') 
+    ssid = 'Cargochi'
+    password = 'Cargochi1234'
+    ap.config(essid=ssid, password=password)
     ap.active(True)
 
     while not ap.active():
@@ -132,9 +75,26 @@ def start_server():
         time.sleep(0.5)
 
     print('AP Active.')
-    print(f'Connect to WiFi "Cargotchi-Setup" and visit: http://{ap.ifconfig()[0]}')
+    ip = ap.ifconfig()[0]
+    print(f'Connect to WiFi "{ssid}" and visit: http://{ip}')
 
-    # Socket Setup
+    # (부팅 시 화면 표시 로직은 동일)
+    try:
+        epd = EPD_2in13_V4_Landscape()
+        epd.init()
+        epd.fill(1)
+        epd.text("Cargochi AP", 10, 10, 0)
+        epd.text("SSID: " + ssid, 10, 30, 0)
+        epd.text("PASS: " + password, 10, 45, 0)
+        epd.text("URL:", 10, 65, 0)
+        epd.text(ip, 10, 80, 0)
+        epd.display(epd.buffer)
+        epd.sleep()
+        del epd
+        gc.collect()
+    except Exception as e:
+        print("AP info display error:", e)
+
     addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
     s = socket.socket()
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -145,81 +105,61 @@ def start_server():
         cl = None
         try:
             cl, addr = s.accept()
-            cl.settimeout(3.0) 
             print('Client connected from', addr)
             
-            # 1. 헤더 읽기 (빈 줄이 나올 때까지)
-            request_bytes = b""
-            while b"\r\n\r\n" not in request_bytes:
-                chunk = cl.recv(1024)
-                if not chunk:
+            cl.settimeout(2.0)
+            request_file = cl.makefile('rwb', 0)
+            
+            header_lines = []
+            while True:
+                line = request_file.readline()
+                if not line or line == b'\r\n':
                     break
-                request_bytes += chunk
+                header_lines.append(line)
             
-            request_str = request_bytes.decode('utf-8')
-            
-            # 2. Content-Length 찾기 (POST 요청인 경우 본문 길이를 알아야 함)
             content_length = 0
-            if 'POST' in request_str:
-                for line in request_str.split('\r\n'):
-                    if 'Content-Length:' in line:
-                        try:
-                            content_length = int(line.split(':')[1].strip())
-                        except ValueError:
-                            pass
+            is_post = False
             
-            # 3. 본문(Body) 데이터 읽기
-            # 헤더와 본문이 분리되어 있는 경우(\r\n\r\n 뒤에 데이터가 모자란 경우) 추가로 읽음
-            header_end_idx = request_bytes.find(b"\r\n\r\n") + 4
-            body_received_len = len(request_bytes) - header_end_idx
-            
-            if content_length > 0:
-                while body_received_len < content_length:
-                    chunk = cl.recv(1024)
-                    if not chunk:
-                        break
-                    request_bytes += chunk
-                    body_received_len += len(chunk)
+            if len(header_lines) > 0:
+                request_line = header_lines[0].decode('utf-8')
+                if 'POST' in request_line:
+                    is_post = True
+                    for line in header_lines:
+                        line_str = line.decode('utf-8')
+                        if 'Content-Length:' in line_str:
+                            try:
+                                content_length = int(line_str.split(':')[1].strip())
+                            except:
+                                pass
 
-            # 전체 요청 문자열 완성
-            full_request = request_bytes.decode('utf-8')
-            print(f"[Debug] Full Request Length: {len(full_request)}") # 디버깅용
+            post_data = b""
+            if is_post and content_length > 0:
+                print(f"Reading body of size: {content_length}")
+                post_data = request_file.read(content_length)
 
-            phone_val, msg_val = load_config()
             saved_status = False
+            if is_post and post_data:
+                try:
+                    body_str = post_data.decode('utf-8')
+                    if 'image_data=' in body_str:
+                        parts = body_str.split('image_data=')
+                        if len(parts) > 1:
+                            hex_data = parts[1].split('&')[0]
+                            hex_data = unquote_plus(hex_data)
+                            update_display_from_buffer(hex_data)
+                            saved_status = True
+                except Exception as e:
+                    print(f"Parsing Error: {e}")
 
-            # POST 처리
-            if 'POST /' in full_request:
-                parts = full_request.split('\r\n\r\n')
-                if len(parts) > 1:
-                    form_data = parts[1]
-                    print(f"[Debug] Form Data: {form_data}") # 데이터가 잘 들어왔는지 확인
-
-                    params = {}
-                    for pair in form_data.split('&'):
-                        if '=' in pair:
-                            key, value = pair.split('=', 1)
-                            params[key] = unquote_plus(value)
-
-                    new_phone = params.get('phone', phone_val)
-                    new_msg = params.get('message', msg_val)
-                    
-                    print(f"[Debug] New: {new_phone}, {new_msg}")
-                    
-                    # 값이 변경되었거나 강제 업데이트를 위해 조건문 완화
-                    # (기존 값이 같아도 '저장' 버튼을 누르면 화면을 갱신하고 싶다면 조건을 지우세요)
-                    save_config(new_phone, new_msg)
-                    update_display(new_phone, new_msg)
-                    phone_val, msg_val = new_phone, new_msg
-                    saved_status = True
-
-            # Response 생성
-            response_html = create_web_page(phone_val, msg_val, saved_status)
+            # --- Send Response ---
+            # 변경된 부분: 파일 읽기 함수 호출
+            response_html = get_web_page(saved_status)
+            
             cl.send('HTTP/1.0 200 OK\r\nContent-type: text/html\r\n\r\n')
             cl.send(response_html)
             
         except OSError as e:
-            pass # 타임아웃은 자연스러운 현상이므로 무시
+            pass
         except Exception as e:
             print(f"Server Error: {e}")
         finally:
@@ -227,8 +167,5 @@ def start_server():
                 cl.close()
             gc.collect()
 
-# --- Main ---
 if __name__ == "__main__":
-    phone, message = load_config()
-    update_display(phone, message)
     start_server()
