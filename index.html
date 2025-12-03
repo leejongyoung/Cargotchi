@@ -63,8 +63,10 @@
     const canvas = document.getElementById('preview');
     const ctx = canvas.getContext('2d');
     
-    // 드라이버가 요구하는 정확한 해상도
+    // 드라이버가 요구하는 정확한 해상도 (내부 버퍼는 250x128 = 4000바이트)
     const width = 250;
+    // 실제 보이는 영역은 CSS에서 122px로 잘라 쓰고,
+    // 버퍼/Hex 데이터는 128px 전체를 생성해서 e-ink 드라이버와 정확히 맞춥니다.
     const height = 128;
 
     function drawCanvas() {
@@ -101,7 +103,7 @@
     }
 
     function generateHex() {
-        // 250x128 전체 영역의 픽셀 데이터를 가져옵니다.
+        // 250x128 전체 영역의 픽셀 데이터를 가져옵니다. (드라이버 버퍼 사이즈와 일치해야 함)
         const imgData = ctx.getImageData(0, 0, width, height);
         const data = imgData.data;
         let hexStr = "";
