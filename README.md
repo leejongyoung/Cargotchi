@@ -2,15 +2,15 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Cargotchi**는 자동차(Car)와 다마고치(Tamagotchi)의 합성어로, Raspberry Pi Pico W와 전자잉크 디스플레이를 활용한 스마트 주차 번호판 프로젝트입니다. 정형화된 주차 번호판에서 벗어나, 사용자가 원하는 대로 내용을 변경하고 개성을 표현할 수 있는 새로운 경험을 제공합니다.
+**Cargotchi**는 자동차(Car)와 다마고치(Tamagotchi)의 합성어로, Raspberry Pi Pico 2W와 전자잉크 디스플레이를 활용한 스마트 주차 번호판 프로젝트입니다. 정형화된 주차 번호판에서 벗어나, 사용자가 원하는 대로 내용을 변경하고 개성을 표현할 수 있는 새로운 경험을 제공합니다.
 
 ---
 
 ## ✨ 주요 기능 (Features)
 
--   **무선 정보 업데이트:** Pico W의 Wi-Fi AP 모드를 통해 스마트폰으로 접속하여 주차 번호와 메시지를 실시간으로 변경할 수 있습니다.
+-   **무선 정보 업데이트:** Pico 2W의 Wi-Fi AP 모드를 통해 스마트폰으로 접속하여 주차 번호와 메시지를 실시간으로 변경할 수 있습니다.
 -   **전자잉크 디스플레이:** 저전력으로 장시간 정보를 표시할 수 있으며, 뛰어난 가독성을 제공합니다.
--   **영구 저장:** 업데이트된 정보는 Pico W의 내장 메모리에 저장되어 전원이 꺼져도 유지됩니다.
+-   **영구 저장:** 업데이트된 정보는 e-Paper 내장 메모리에 저장되어 전원이 꺼져도 유지됩니다.
 -   **개성 있는 디자인:** 딱딱한 번호판 대신 원하는 문구를 자유롭게 표시하여 개성을 표현할 수 있습니다.
 
 ---
@@ -20,6 +20,8 @@
 -   **하드웨어:**
     -   Raspberry Pi Pico 2W
     -   Waveshare 2.13inch e-Paper Display V4
+    -   3xAA 배터리 홀더
+    -   3D 프린터 출력 케이스 (STL 파일 제공)
 -   **소프트웨어:**
     -   MicroPython
     -   HTML/CSS (for the configuration web page)
@@ -28,8 +30,8 @@
 
 ## 🚀 시작하기 (Getting Started)
 
-1.  **파일 업로드:** `main.py` 파일과 `lib` 폴더 전체를 Raspberry Pi Pico W에 업로드합니다.
-2.  **전원 연결:** Pico W에 전원을 연결하면, 마지막으로 저장된 정보가 전자잉크 화면에 나타납니다.
+1.  **파일 업로드:** `main.py` 파일과 `lib` 폴더 전체를 Raspberry Pi Pico 2W에 업로드합니다.
+2.  **전원 연결:** Pico 2W에 전원을 연결하면, 마지막으로 저장된 정보가 전자잉크 화면에 나타납니다.
 3.  **Wi-Fi 연결:**
     -   스마트폰의 Wi-Fi 설정에서 **`Cargotchi-Setup`** 네트워크를 찾아 연결합니다. (비밀번호 없음)
 4.  **정보 변경:**
@@ -46,6 +48,9 @@
 ├── lib/
 │   ├── epd2in13_V4.py
 │   └── uQR.py
+├── stl/
+│   ├── ePaper 2.13 Pi Pico 3xAA back case.stl
+│   └── ePaper 2.13 Pi Pico 3xAA front case.stl
 ├── main.py              # 메인 애플리케이션 (웹 서버 및 디스플레이 제어)
 ├── index.html           # 웹 설정 페이지 UI
 └── README.md            # 프로젝트 소개
@@ -53,13 +58,35 @@
 
 ---
 
-## 📷 스크린샷 (Screenshots)
+<h2>📷 스크린샷 (Screenshots)</h2>
 
-*   Cargotchi 하드웨어
-    ![Cargotchi Initial Screen (Hardware)](./images/screenshot1.png)
+<h3>Cargotchi 하드웨어</h3>
+<table>
+  <tr>
+    <td align="center">
+      <img src="./images/screenshot1.png" alt="Cargotchi Initial Screen (Hardware 1)" width="400"/>
+      <br><sub><b>Cargotchi Initial Screen (Hardware 1)</b></sub>
+    </td>
+    <td align="center">
+      <img src="./images/screenshot2.png" alt="Cargotchi Hardware (Hardware 2)" width="400"/>
+      <br><sub><b>Cargotchi Hardware (Hardware 2)</b></sub>
+    </td>
+  </tr>
+</table>
 
-*   웹 설정 페이지 화면
-    ![Web Configuration Page](./images/screenshot2.png)
+<h3>웹 설정 페이지 화면</h3>
+<table>
+  <tr>
+    <td align="center">
+      <img src="./images/screenshot3.png" alt="Web Configuration Page (Software 1)" width="400"/>
+      <br><sub><b>Web Configuration Page (Software 1)</b></sub>
+    </td>
+    <td align="center">
+      <img src="./images/screenshot4.png" alt="Web Configuration Page (Software 2)" width="400"/>
+      <br><sub><b>Web Configuration Page (Software 2)</b></sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
