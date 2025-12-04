@@ -1,3 +1,33 @@
+# *****************************************************************************
+# * | File        :   uQR.py
+# * | Author      :   JASchilz
+# * | Function    :   MicroPython QR Code Generator
+# * | Info        :
+# *----------------
+# * | This version:   V7.0
+# * | Date        :   2021-05-17
+# # | Info        :   Forked from https://github.com/JASchilz/uQR
+# -----------------------------------------------------------------------------
+# Copyright (c) 2018, Joseph Schilz
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documnetation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to  whom the Software is
+# furished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
 import ure as re
 
 """
@@ -487,11 +517,6 @@ def pattern_position(version):
 def make_mask_func(pattern):
     """
     Return the mask function for the given mask pattern.
-
-    MicroPython 환경에서 예기치 않은 타입 섞임으로 인해
-    잘못된 패턴 값이 들어오는 경우가 있어,
-    명세에 어긋나는 값이 오면 기본 패턴(0번)을 사용하도록
-    안전하게 처리한다.
     """
     if pattern == 0:   # 000
         return lambda i, j: (i + j) % 2 == 0
@@ -509,10 +534,7 @@ def make_mask_func(pattern):
         return lambda i, j: ((i * j) % 2 + (i * j) % 3) % 2 == 0
     if pattern == 7:  # 111
         return lambda i, j: ((i * j) % 3 + (i + j) % 2) % 2 == 0
-
-    # 그 외 값은 모두 기본 패턴(0)으로 폴백
-    # (QR 사양상 어떤 마스크를 써도 인코딩은 가능하므로, 품질에만 약간 영향)
-    return lambda i, j: (i + j) % 2 == 0
+    raise TypeError("Bad mask pattern: " + pattern)  # pragma: no cover
 
 
 def mode_sizes_for_version(version):

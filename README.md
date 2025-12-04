@@ -18,7 +18,7 @@
 ## 🛠️ 기술 스택 (Tech Stack)
 
 -   **하드웨어:**
-    -   Raspberry Pi Pico W
+    -   Raspberry Pi Pico 2W
     -   Waveshare 2.13inch e-Paper Display V4
 -   **소프트웨어:**
     -   MicroPython
@@ -45,11 +45,21 @@
 /Cargotchi
 ├── lib/
 │   ├── epd2in13_V4.py
-│   └── epd2in13_V4_Utils.py
+│   └── uQR.py
 ├── main.py              # 메인 애플리케이션 (웹 서버 및 디스플레이 제어)
 ├── index.html           # 웹 설정 페이지 UI
 └── README.md            # 프로젝트 소개
 ```
+
+---
+
+## 📷 스크린샷 (Screenshots)
+
+*   Cargotchi 하드웨어
+    ![Cargotchi Initial Screen (Hardware)](./images/screenshot1.png)
+
+*   웹 설정 페이지 화면
+    ![Web Configuration Page](./images/screenshot2.png)
 
 ---
 
