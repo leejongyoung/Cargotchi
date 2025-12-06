@@ -60,30 +60,30 @@
 
 <h2>📷 스크린샷 (Screenshots)</h2>
 
-<h3>Cargotchi 하드웨어</h3>
+<h3>Cargotchi 초기 와이파이 설정</h3>
 <table>
   <tr>
     <td align="center">
       <img src="./images/screenshot1.png" alt="Cargotchi Initial Screen (Hardware 1)" width="400"/>
-      <br><sub><b>Cargotchi Initial Screen (Hardware 1)</b></sub>
+      <br><sub><b>Screenshot 1</b></sub>
     </td>
     <td align="center">
       <img src="./images/screenshot2.png" alt="Cargotchi Hardware (Hardware 2)" width="400"/>
-      <br><sub><b>Cargotchi Hardware (Hardware 2)</b></sub>
+      <br><sub><b>Screenshot 2</b></sub>
     </td>
   </tr>
 </table>
 
-<h3>웹 설정 페이지 화면</h3>
+<h3>와이파이 연결 후 웹 설정 페이지에서 화면 업데이트</h3>
 <table>
   <tr>
     <td align="center">
       <img src="./images/screenshot3.png" alt="Web Configuration Page (Software 1)" width="400"/>
-      <br><sub><b>Web Configuration Page (Software 1)</b></sub>
+      <br><sub><b>Screenshot 3</b></sub>
     </td>
     <td align="center">
       <img src="./images/screenshot4.png" alt="Web Configuration Page (Software 2)" width="400"/>
-      <br><sub><b>Web Configuration Page (Software 2)</b></sub>
+      <br><sub><b>Screenshot 4</b></sub>
     </td>
   </tr>
 </table>
